@@ -1036,6 +1036,10 @@ mrb_run(mrb_state *mrb, struct RProc *proc, mrb_value self)
       recv = regs[0];
       c = mrb->c->ci->target_class->super;
       m = mrb_method_search_vm(mrb, &c, mid);
+      if (!m && (recv.tt == MRB_TT_CLASS)) {
+        struct RClass* cc = ((struct RClass*)recv.value.p)->c->super;
+        m = mrb_method_search_vm(mrb,&cc,mid);
+      }
       if (!m) {
         mid = mrb_intern2(mrb, "method_missing", 14);
         m = mrb_method_search_vm(mrb, &c, mid);
