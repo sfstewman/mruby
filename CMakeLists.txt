@@ -93,12 +93,12 @@ MRBC(mrblib_irep
 #mrbgems/mruby-minitest/pride.rb
 #mrbgems/mruby-minitest/spec.rb
 
-#CONCAT_FILES(${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
-#  mrbgems/mruby-minitest/unit.rb
-#  )
-#MRBC(mrb_mruby_minitest_irep
-#  ${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
-#  ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c)
+CONCAT_FILES(${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
+  mrbgems/mruby-minitest/unit.rb
+  )
+MRBC(mrb_mruby_minitest_irep
+  ${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
+  ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c)
 
 set(MRUBY_GEM_SRCS
   mrbgems/mrbgems_all.c
@@ -106,13 +106,13 @@ set(MRUBY_GEM_SRCS
 
   mrbgems/mruby-math/src/math.c
   mrbgems/mruby-numeric-ext/src/numeric_ext.c
-  # mrbgems/mruby-require/src/mrb_require.c
+  mrbgems/mruby-require/src/mrb_require.c
   mrbgems/mruby-sprintf/src/kernel.c
   mrbgems/mruby-sprintf/src/sprintf.c
   mrbgems/mruby-struct/src/struct.c
   mrbgems/mruby-time/src/time.c
 
-  # ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c
+  ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c
   # ${CMAKE_CURRENT_BINARY_DIR}/mrbgem_struct_irep.c
   )
 
