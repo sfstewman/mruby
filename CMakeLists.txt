@@ -3,20 +3,27 @@ find_package(Readline)
 
 include(ConcatFiles)
 include(CCompilerOptions)
+include(MRubyCompiler)
 
 # Reset CFLAGS and our include directories
-get_property(CMAKE_C_FLAGS GLOBAL PROPERTY ORIG_CMAKE_C_FLAGS)
+#set(SAVED_C_FLAGS ${CMAKE_C_FLAGS})
+#get_property(CMAKE_C_FLAGS GLOBAL PROPERTY ORIG_CMAKE_C_FLAGS)
 set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 
+set(MRUBY_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(MRUBY_VM_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set_property(GLOBAL PROPERTY MRUBY_INCLUDE_DIR ${MRUBY_INCLUDE_DIR})
+set_property(GLOBAL PROPERTY MRUBY_VM_INCLUDE_DIR ${MRUBY_VM_INCLUDE_DIR})
+
 include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${MRUBY_INCLUDE_DIR}
+  ${MRUBY_VM_INCLUDE_DIR}
   )
 
-CCompilerOptions(
-  LANG C99
-  DEBUG ${DEBUG_LEVEL}
-  WARNINGS ALL)
+#CCompilerOptions(
+#  LANG C99
+#  DEBUG ${DEBUG_LEVEL}
+#  WARNINGS ALL)
 
 set(PARSER_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 file(MAKE_DIRECTORY ${PARSER_OUTPUT_DIR})
@@ -58,17 +65,11 @@ set(MRUBY_SRCS
   )
 
 add_library( mruby STATIC ${MRUBY_SRCS} )
+set_target_properties(mruby PROPERTIES COMPILE_FLAGS "-Wno-pedantic")
 
 add_executable(mrbc_exe tools/mrbc/mrbc.c)
 set_target_properties(mrbc_exe PROPERTIES OUTPUT_NAME mrbc)
 target_link_libraries(mrbc_exe mruby)
-
-macro(mrbc _vname _rbfile _cfile)
-  add_custom_command(OUTPUT ${_cfile}
-    COMMAND mrbc_exe -B${_vname} -o${_cfile} ${_rbfile}
-    DEPENDS mrbc_exe ${_rbfile}
-    VERBATIM)
-endmacro()
 
 CONCAT_FILES(${CMAKE_CURRENT_BINARY_DIR}/mrblib.rb
   mrblib/array.rb
@@ -87,58 +88,7 @@ MRBC(mrblib_irep
   ${CMAKE_CURRENT_BINARY_DIR}/mrblib.rb
   ${CMAKE_CURRENT_BINARY_DIR}/mrblib_irep.c)
 
-#mrbgems/mruby-minitest/autorun.rb
-#mrbgems/mruby-minitest/benchmark.rb
-#mrbgems/mruby-minitest/mock.rb
-#mrbgems/mruby-minitest/pride.rb
-#mrbgems/mruby-minitest/spec.rb
+add_library(mrblib STATIC mrblib_irep.c mrblib/init_mrblib.c)
 
-CONCAT_FILES(${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
-  mrbgems/mruby-minitest/unit.rb
-  )
-MRBC(mrb_mruby_minitest_irep
-  ${CMAKE_CURRENT_BINARY_DIR}/minitest_all.rb
-  ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c)
-
-set(MRUBY_GEM_SRCS
-  mrbgems/mrbgems_all.c
-  mrbgems/mrbgems_registration_list.h
-
-  mrbgems/mruby-math/src/math.c
-  mrbgems/mruby-numeric-ext/src/numeric_ext.c
-  mrbgems/mruby-require/src/mrb_require.c
-  mrbgems/mruby-sprintf/src/kernel.c
-  mrbgems/mruby-sprintf/src/sprintf.c
-  mrbgems/mruby-struct/src/struct.c
-  mrbgems/mruby-time/src/time.c
-
-  ${CMAKE_CURRENT_BINARY_DIR}/minitest_irep.c
-  # ${CMAKE_CURRENT_BINARY_DIR}/mrbgem_struct_irep.c
-  )
-
-unset(MIRB_EXE_LIBS)
-add_executable(mirb_exe
-  tools/mirb/mirb.c
-  mrblib_irep.c
-  mrblib/init_mrblib.c
-  ${MRUBY_GEM_SRCS})
-
-if (READLINE_FOUND)
-  include_directories(${READLINE_INCLUDE_DIR})
-  set_property(TARGET mirb_exe
-    APPEND PROPERTY COMPILE_DEFINITIONS "ENABLE_READLINE")
-  list(APPEND MIRB_EXE_LIBS ${READLINE_LIBRARY})
-endif (READLINE_FOUND)
-
-set_target_properties(mirb_exe PROPERTIES OUTPUT_NAME mirb)
-target_link_libraries(mirb_exe mruby ${MIRB_EXE_LIBS})
-
-add_executable(mruby_exe
-  tools/mruby/mruby.c
-  mrblib_irep.c
-  mrblib/init_mrblib.c
-  ${MRUBY_GEM_SRCS})
-set_target_properties(mruby_exe PROPERTIES OUTPUT_NAME mruby)
-target_link_libraries(mruby_exe mruby ${MIRB_EXE_LIBS})
-
+#set(CMAKE_C_FLAGS ${SAVED_C_FLAGS})
 
